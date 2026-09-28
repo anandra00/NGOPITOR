@@ -6,7 +6,7 @@
 [![PHP](https://img.shields.io/badge/PHP-8.3-777BB4?style=for-the-badge&logo=php&logoColor=white)](https://php.net)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-17%2F18-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)](https://www.postgresql.org/)
 [![Sanctum](https://img.shields.io/badge/Auth-Laravel%20Sanctum-red?style=for-the-badge)](https://laravel.com/docs/sanctum)
-[![Tests](https://img.shields.io/badge/Tests-23%20Passed-brightgreen?style=for-the-badge&logo=phpunit&logoColor=white)](tests/)
+[![Tests](https://img.shields.io/badge/Tests-21%20Passed-brightgreen?style=for-the-badge&logo=phpunit&logoColor=white)](tests/)
 
 ---
 
@@ -260,7 +260,7 @@ Proyek ini menerapkan pengujian otomatis (*Automated Testing*) berbasis PHPUnit 
 - **`AuthTest.php`** (8 tests): Registrasi, validasi duplikat email, verifikasi password, login kredensial, proteksi token Sanctum, fetch `/me`, dan logout.
 - **`CoffeeShopTest.php`** (8 tests): Paginasi data kafe, pencarian kata kunci, filter kota, filter fasilitas WFC, sorting harga, pengambilan detail slug, error 404 seragam, dan integritas seeder.
 - **`RecommendationTest.php`** (5 tests): Logika mode WFC, mode Hangout, mode Budget, filter kota rekomendasi, dan mode bobot kustom.
-- **Total Pengujian**: **23 tests | 178 assertions (100% Pass)**.
+- **Total Pengujian**: **21 tests | 176 assertions (100% Pass)** (seluruh dummy boilerplate bawaan telah dibersihkan).
 - **Standar Kode**: Divalidasi dan diformat menggunakan **Laravel Pint**.
 
 ---

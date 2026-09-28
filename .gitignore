@@ -30,6 +30,8 @@ Thumbs.db
 /.claude
 /.factory
 CLAUDE.md
+AGENTS.md
+.mcp.json
 opencode.json
 boost.json
 
