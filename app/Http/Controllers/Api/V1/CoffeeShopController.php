@@ -3,23 +3,24 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\CoffeeShop\CoffeeShopFilterRequest;
 use App\Http\Resources\CoffeeShopResource;
 use App\Models\CoffeeShop;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 
 class CoffeeShopController extends Controller
 {
     /**
-     * Display a listing of active coffee shops.
+     * Display a listing of active coffee shops with optional filters and search.
      */
-    public function index(Request $request): JsonResponse
+    public function index(CoffeeShopFilterRequest $request): JsonResponse
     {
-        $perPage = min((int) $request->input('per_page', 15), 50);
+        $filters = $request->validated();
+        $perPage = (int) ($filters['per_page'] ?? 15);
 
         $coffeeShops = CoffeeShop::query()
             ->active()
-            ->orderByDesc('rating')
+            ->filter($filters)
             ->paginate($perPage);
 
         return $this->successResponse([
@@ -30,6 +31,7 @@ class CoffeeShopController extends Controller
                 'total' => $coffeeShops->total(),
                 'last_page' => $coffeeShops->lastPage(),
             ],
+            'applied_filters' => $filters,
         ], 'Coffee shops retrieved successfully');
     }
 

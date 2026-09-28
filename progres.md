@@ -10,7 +10,7 @@ Dokumen ini berfungsi sebagai catatan rekam jejak (*changelog* & *progress track
 | :--- | :--- | :---: | :---: |
 | **NGO-4** | Setup Fondasi RESTful API, Standard Response JSON & Autentikasi Token | ✅ **SELESAI** | 2026-09-28 |
 | **NGO-5** | Skema Database, Model, Factory & Seeder Data Kedai Kopi | ✅ **SELESAI** | 2026-09-28 |
-| **NGO-6** | Algoritma Scoring, Filter Pencarian & Rekomendasi Kedai Kopi | ⏳ **SELANJUTNYA** | *Menunggu eksekusi* |
+| **NGO-6** | Algoritma Scoring, Filter Pencarian & Rekomendasi Kedai Kopi | ✅ **SELESAI** | 2026-09-28 |
 
 ---
 
@@ -84,29 +84,44 @@ Dokumen ini berfungsi sebagai catatan rekam jejak (*changelog* & *progress track
   - Route:
     - `GET /api/v1/coffee-shops` (List kedai kopi dengan pagination & sorting rating).
     - `GET /api/v1/coffee-shops/{coffeeShop:slug}` (Detail kedai kopi berdasarkan slug).
-- [x] **Pengujian & Validasi**:
-  - Feature test di [`tests/Feature/CoffeeShopTest.php`](tests/Feature/CoffeeShopTest.php) (4 test kasus, 68 assertions).
-  - Total pengujian proyek saat ini: **14 tests, 115 assertions (100% Pass)**.
-  - Diformat dengan Laravel Pint dan dipush ke remote branch `main`.
 
 ---
 
-## 🔮 Rencana Kerja Berikutnya: Tiket NGO-6
-**Tujuan**: Implementasi algoritma scoring rekomendasi dan fitur filter pencarian kedai kopi.
+### 3. Tiket NGO-6: Algoritma Scoring, Filter Pencarian & Rekomendasi
+**Tujuan**: Mengimplementasikan pencarian multifaset, filter dinamis, dan algoritma scoring rekomendasi terbobot (*multi-criteria weighted scoring*).
 
-- [ ] **Fitur Pencarian & Filter Lanjutan**:
-  - Filter berdasarkan kota (`city`).
-  - Filter rentang harga (`price_range` atau `min_price` - `max_price`).
-  - Filter fasilitas (e.g. `wifi`, `colokan`, `ac`, `outdoor`, `smoking`, `work_friendly`).
-  - Filter suasana (`ambiance`) dan tingkat kebisingan (`noise_level`).
-  - Search keyword pada nama atau alamat kedai kopi.
-- [ ] **Algoritma Scoring Rekomendasi**:
-  - Pembobotan parameter (WFC Score, Comfort Score, Budget-friendly Score).
-  - Formula perhitungan skor kesesuaian berdasarkan preferensi user.
-  - Endpoint rekomendasi teratas: `GET /api/v1/coffee-shops/recommendations`.
-- [ ] **Automated Testing & Dokumentasi**:
-  - Penulisan feature test untuk filter dan algoritma scoring.
-  - Update dokumentasi endpoints.
+- [x] **Pencarian & Filter Lanjutan**:
+  - Form Request: [`app/Http/Requests/CoffeeShop/CoffeeShopFilterRequest.php`](app/Http/Requests/CoffeeShop/CoffeeShopFilterRequest.php) dengan normalisasi boolean otomatis via `prepareForValidation()`.
+  - Eloquent Scope: `scopeFilter()` di [`app/Models/CoffeeShop.php`](app/Models/CoffeeShop.php) (driver-agnostic SQL, kompatibel dengan PostgreSQL & SQLite).
+  - Parameter filter:
+    - `search` : Pencarian keyword case-insensitive pada nama, alamat, atau deskripsi.
+    - `city` : Filter berdasarkan kota (*partial match*).
+    - `price_range`, `min_price`, `max_price` : Filter rentang harga.
+    - `min_rating` : Filter rating minimal.
+    - Fasilitas WFC: `has_wifi`, `has_power_outlets`, `is_ac`, `is_outdoor`, `is_smoking_area`, `is_work_friendly`, `has_prayer_room`.
+    - Suasana & Kebisingan: `ambiance` (*aesthetic, cozy, minimalist, nature, industrial*), `noise_level` (*quiet, moderate, loud*).
+    - Sorting: `sort_by` (`rating`, `review_count`, `price_min`, `price_max`, `name`, `wifi_speed_mbps`) & `sort_order` (`asc`, `desc`).
+- [x] **Algoritma Scoring Rekomendasi**:
+  - Service: [`app/Services/RecommendationService.php`](app/Services/RecommendationService.php).
+  - Mendukung 3 mode preset dan mode kustom:
+    1. **Mode WFC (`wfc`)**:
+       Prioritas: Kecepatan Wi-Fi & colokan listrik (45%), Suasana hening & AC (25%), Rating (15%), Efisiensi harga (15%).
+    2. **Mode Hangout (`hangout`)**:
+       Prioritas: Suasana estetik/nature & area outdoor (45%), Rating & popularitas ulasan (30%), Efisiensi harga (15%), Wi-Fi (10%).
+    3. **Mode Budget (`budget`)**:
+       Prioritas: Harga termurah (45%), Rating (25%), Fasilitas Wi-Fi/colokan (15%), Kenyamanan (15%).
+    4. **Mode Kustom (`custom`)**:
+       Menerima bobot dinamis dari client (`rating_weight`, `wfc_weight`, `comfort_weight`, `price_weight`).
+  - Output transparan: Menyertakan `match_score` (0.0 - 100.0), `match_percentage`, `score_breakdown` (skor rating, skor wfc, skor kenyamanan, skor harga), dan *contextual highlights* alasan rekomendasi.
+- [x] **Endpoint Rekomendasi**:
+  - Request: [`app/Http/Requests/CoffeeShop/RecommendationRequest.php`](app/Http/Requests/CoffeeShop/RecommendationRequest.php).
+  - Controller: [`app/Http/Controllers/Api/V1/RecommendationController.php`](app/Http/Controllers/Api/V1/RecommendationController.php).
+  - Route: `GET /api/v1/coffee-shops/recommendations` (ditempatkan sebelum `{coffeeShop:slug}`).
+- [x] **Pengujian & Validasi**:
+  - Feature test pencarian & filter: [`tests/Feature/CoffeeShopTest.php`](tests/Feature/CoffeeShopTest.php) (8 test cases).
+  - Feature test algoritma rekomendasi: [`tests/Feature/RecommendationTest.php`](tests/Feature/RecommendationTest.php) (5 test cases).
+  - Total pengujian proyek: **23 tests, 178 assertions (100% Pass)**.
+  - Kode telah lolos pemformatan Laravel Pint.
 
 ---
 
@@ -120,22 +135,29 @@ NGOPITOR/
 │   │   │   ├── Controller.php (Base Controller + ApiResponse trait)
 │   │   │   └── Api/V1/
 │   │   │       ├── AuthController.php (Register, Login, Me, Logout)
-│   │   │       └── CoffeeShopController.php (Index & Show)
-│   │   ├── Requests/Auth/
-│   │   │   ├── RegisterRequest.php
-│   │   │   └── LoginRequest.php
+│   │   │       ├── CoffeeShopController.php (Index dengan filter & Show)
+│   │   │       └── RecommendationController.php (Scored recommendations)
+│   │   ├── Requests/
+│   │   │   ├── Auth/
+│   │   │   │   ├── RegisterRequest.php
+│   │   │   │   └── LoginRequest.php
+│   │   │   └── CoffeeShop/
+│   │   │       ├── CoffeeShopFilterRequest.php
+│   │   │       └── RecommendationRequest.php
 │   │   └── Resources/
 │   │       ├── UserResource.php
 │   │       └── CoffeeShopResource.php
 │   ├── Models/
 │   │   ├── User.php (HasApiTokens)
-│   │   └── CoffeeShop.php (Fillable, Casts, Scopes)
+│   │   └── CoffeeShop.php (Fillable, Casts, Scopes: active, inCity, workFriendly, filter)
+│   ├── Services/
+│   │   └── RecommendationService.php (Multi-criteria weighted scoring algorithm)
 │   └── Traits/
 │       └── ApiResponse.php (Standarisasi response JSON API)
 ├── database/
 │   ├── factories/
 │   │   ├── UserFactory.php
-│   │   └── CoffeeShopFactory.php
+│   │   └── CoffeeShopFactory.php (states: workFriendly, outdoor)
 │   ├── migrations/
 │   │   ├── ..._create_users_table.php
 │   │   ├── ..._create_personal_access_tokens_table.php
@@ -144,11 +166,12 @@ NGOPITOR/
 │       ├── DatabaseSeeder.php
 │       └── CoffeeShopSeeder.php (10 Real Cafes + 15 Factory Cafes)
 ├── routes/
-│   └── api.php (Prefix v1: auth & coffee-shops)
+│   └── api.php (Prefix v1: auth, coffee-shops & recommendations)
 ├── tests/
 │   └── Feature/
 │       ├── AuthTest.php (8 test cases)
-│       └── CoffeeShopTest.php (4 test cases)
+│       ├── CoffeeShopTest.php (8 test cases)
+│       └── RecommendationTest.php (5 test cases)
 ├── .gitignore (Termasuk ignore /.agents)
 ├── progres.md (Dokumen tracking ini)
 └── README.md

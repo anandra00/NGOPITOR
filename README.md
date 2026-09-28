@@ -4,8 +4,8 @@ Backend RESTful API untuk platform rekomendasi dan direktori kedai kopi **NGOPIT
 
 ## Fitur & Status Implementasi
 - [x] **NGO-4**: Fondasi RESTful API, standarisasi format response JSON, exception handling, dan autentikasi token (Register, Login, Me, Logout via Sanctum).
-- [ ] **NGO-5**: Skema database dan seeder data kedai kopi (Coffee Shops).
-- [ ] **NGO-6**: Algoritma scoring dan filter pencarian kedai kopi.
+- [x] **NGO-5**: Skema database dan seeder data kedai kopi (Coffee Shops).
+- [x] **NGO-6**: Algoritma scoring dan filter pencarian kedai kopi.
 
 ## Requirements
 - PHP >= 8.3

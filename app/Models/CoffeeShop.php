@@ -87,7 +87,7 @@ class CoffeeShop extends Model
      */
     public function scopeInCity(Builder $query, string $city): Builder
     {
-        return $query->where('city', 'ILIKE', "%{$city}%");
+        return $query->whereRaw('LOWER(city) LIKE ?', ['%'.strtolower($city).'%']);
     }
 
     /**
@@ -98,5 +98,73 @@ class CoffeeShop extends Model
         return $query->where('is_work_friendly', true)
             ->where('has_wifi', true)
             ->where('has_power_outlets', true);
+    }
+
+    /**
+     * Scope a query to apply dynamic filters.
+     *
+     * @param  array<string, mixed>  $filters
+     */
+    public function scopeFilter(Builder $query, array $filters): Builder
+    {
+        if (! empty($filters['search'])) {
+            $search = strtolower($filters['search']);
+            $query->where(function (Builder $q) use ($search): void {
+                $q->whereRaw('LOWER(name) LIKE ?', ["%{$search}%"])
+                    ->orWhereRaw('LOWER(address) LIKE ?', ["%{$search}%"])
+                    ->orWhereRaw('LOWER(description) LIKE ?', ["%{$search}%"]);
+            });
+        }
+
+        if (! empty($filters['city'])) {
+            $city = strtolower($filters['city']);
+            $query->whereRaw('LOWER(city) LIKE ?', ["%{$city}%"]);
+        }
+
+        if (! empty($filters['price_range'])) {
+            $query->where('price_range', $filters['price_range']);
+        }
+
+        if (isset($filters['min_price'])) {
+            $query->where('price_min', '>=', $filters['min_price']);
+        }
+
+        if (isset($filters['max_price'])) {
+            $query->where('price_max', '<=', $filters['max_price']);
+        }
+
+        if (isset($filters['min_rating'])) {
+            $query->where('rating', '>=', $filters['min_rating']);
+        }
+
+        $booleanFilters = [
+            'has_wifi',
+            'has_power_outlets',
+            'is_ac',
+            'is_outdoor',
+            'is_smoking_area',
+            'is_work_friendly',
+            'has_prayer_room',
+        ];
+
+        foreach ($booleanFilters as $field) {
+            if (isset($filters[$field])) {
+                $query->where($field, filter_var($filters[$field], FILTER_VALIDATE_BOOLEAN));
+            }
+        }
+
+        if (! empty($filters['ambiance'])) {
+            $query->where('ambiance', $filters['ambiance']);
+        }
+
+        if (! empty($filters['noise_level'])) {
+            $query->where('noise_level', $filters['noise_level']);
+        }
+
+        $allowedSorts = ['rating', 'review_count', 'price_min', 'price_max', 'name', 'wifi_speed_mbps'];
+        $sortBy = in_array($filters['sort_by'] ?? null, $allowedSorts, true) ? $filters['sort_by'] : 'rating';
+        $sortOrder = strtolower($filters['sort_order'] ?? 'desc') === 'asc' ? 'asc' : 'desc';
+
+        return $query->orderBy($sortBy, $sortOrder);
     }
 }
